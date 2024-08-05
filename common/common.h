@@ -77,8 +77,6 @@ struct cpu_params {
 };
 
 struct gpt_params {
-    uint32_t seed                 = LLAMA_DEFAULT_SEED; // RNG seed
-
     int32_t n_predict             =    -1; // new tokens to predict
     int32_t n_ctx                 =     0; // context size
     int32_t n_batch               =  2048; // logical batch size for prompt processing (must be >=32 to use BLAS)
