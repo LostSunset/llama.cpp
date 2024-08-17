@@ -353,16 +353,14 @@ void postprocess_cpu_params(cpu_params& cpuparams, const cpu_params* role_model)
 }
 
 bool gpt_params_parse_ex(int argc, char ** argv, gpt_params & params) {
-    bool invalid_param = false;
-    std::string arg;
-    const std::string arg_prefix = "--";
-    auto & sparams = params.sparams;
-
     for (int i = 1; i < argc; i++) {
-        arg = argv[i];
+        const std::string arg_prefix = "--";
+
+        std::string arg = argv[i];
         if (arg.compare(0, arg_prefix.size(), arg_prefix) == 0) {
             std::replace(arg.begin(), arg.end(), '_', '-');
         }
+        bool invalid_param = false;
         if (!gpt_params_find_arg(argc, argv, arg, params, i, invalid_param)) {
             throw std::invalid_argument("error: unknown argument: " + arg);
         }
@@ -385,6 +383,8 @@ bool gpt_params_parse_ex(int argc, char ** argv, gpt_params & params) {
     if (params.hf_token.empty()) {
         get_env("HF_TOKEN", params.hf_token);
     }
+
+    auto & sparams = params.sparams;
 
     if (params.escape) {
         string_process_escapes(params.prompt);
