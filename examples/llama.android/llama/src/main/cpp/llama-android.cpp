@@ -396,17 +396,10 @@ Java_android_llama_cpp_LLamaAndroid_completion_1loop(
     auto n_vocab = llama_n_vocab(model);
     auto logits = llama_get_logits_ith(context, batch->n_tokens - 1);
 
-    std::vector<llama_token_data> candidates;
-    candidates.reserve(n_vocab);
-
-    for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
-        candidates.emplace_back(llama_token_data{ token_id, logits[token_id], 0.0f });
-    }
-
-    llama_token_data_array candidates_p = { candidates.data(), candidates.size(), false };
+    llama_sampling_set_logits(sampling, logits);
 
     // sample the most likely token
-    const auto new_token_id = llama_sampling_sample_greedy(sampling, &candidates_p);
+    const auto new_token_id = llama_sampling_sample_greedy(sampling, nullptr);
 
     const auto n_cur = env->CallIntMethod(intvar_ncur, la_int_var_value);
     if (llama_token_is_eog(model, new_token_id) || n_cur == n_len) {

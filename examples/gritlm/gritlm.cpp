@@ -118,14 +118,9 @@ static std::string generate(llama_context * ctx, llama_sampling * smpl, const st
         llama_decode(ctx, bat);
         auto * logits = llama_get_logits_ith(ctx, bat.n_tokens - 1);
 
-        auto candidates = std::vector<llama_token_data>(llama_n_vocab(model));
-        auto n_candidates = (int32_t)candidates.size();
-        for (int32_t token = 0; token < n_candidates; token++) {
-            candidates[token] = llama_token_data{ token, logits[token], 0.0f };
-        }
-        auto candidates_p = llama_token_data_array{ candidates.data(), candidates.size(), false };
+        llama_sampling_set_logits(smpl, logits);
 
-        llama_token token = llama_sampling_sample_greedy(smpl, &candidates_p);
+        llama_token token = llama_sampling_sample_greedy(smpl, nullptr);
         if (token == eos_token) {
             break;
         }

@@ -149,17 +149,9 @@ actor LlamaContext {
         let n_vocab = llama_n_vocab(model)
         let logits = llama_get_logits_ith(context, batch.n_tokens - 1)
 
-        var candidates = Array<llama_token_data>()
-        candidates.reserveCapacity(Int(n_vocab))
+        llama_sampling_set_logits(sampling, logits);
 
-        for token_id in 0..<n_vocab {
-            candidates.append(llama_token_data(id: token_id, logit: logits![Int(token_id)], p: 0.0))
-        }
-        candidates.withUnsafeMutableBufferPointer() { buffer in
-            var candidates_p = llama_token_data_array(data: buffer.baseAddress, size: buffer.count, sorted: false)
-
-            new_token_id = llama_sampling_sample_greedy(sampling, &candidates_p)
-        }
+        new_token_id = llama_sampling_sample_greedy(sampling, nil)
 
         if llama_token_is_eog(model, new_token_id) || n_cur == n_len {
             print("\n")

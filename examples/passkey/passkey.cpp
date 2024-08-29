@@ -216,20 +216,12 @@ int main(int argc, char ** argv) {
     while (n_cur <= n_len) {
         // sample the next token
         {
-            auto   n_vocab = llama_n_vocab(model);
-            auto * logits  = llama_get_logits_ith(ctx, batch.n_tokens - 1);
+            const auto * logits = llama_get_logits_ith(ctx, batch.n_tokens - 1);
 
-            std::vector<llama_token_data> candidates;
-            candidates.reserve(n_vocab);
-
-            for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
-                candidates.emplace_back(llama_token_data{ token_id, logits[token_id], 0.0f });
-            }
-
-            llama_token_data_array candidates_p = { candidates.data(), candidates.size(), false };
+            llama_sampling_set_logits(smpl, logits);
 
             // sample the most likely token
-            const llama_token new_token_id = llama_sampling_sample_greedy(smpl, &candidates_p);
+            const llama_token new_token_id = llama_sampling_sample_greedy(smpl, nullptr);
 
             // is it an end of generation?
             if (llama_token_is_eog(model, new_token_id) || n_cur == n_len) {

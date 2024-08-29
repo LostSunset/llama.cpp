@@ -69,16 +69,11 @@ int main(int argc, char ** argv) {
     printf("\nfirst run: %s", params.prompt.c_str());
 
     for (auto i = 0; i < params.n_predict; i++) {
-        auto * logits = llama_get_logits(ctx);
-        auto n_vocab = llama_n_vocab(model);
+        const auto * logits = llama_get_logits(ctx);
 
-        std::vector<llama_token_data> candidates;
-        candidates.reserve(n_vocab);
-        for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
-            candidates.emplace_back(llama_token_data{token_id, logits[token_id], 0.0f});
-        }
-        llama_token_data_array candidates_p = { candidates.data(), candidates.size(), false };
-        auto next_token = llama_sampling_sample_dist(smpl, &candidates_p);
+        llama_sampling_set_logits(smpl, logits);
+
+        auto next_token = llama_sampling_sample_dist(smpl, nullptr);
         auto next_token_str = llama_token_to_piece(ctx, next_token);
 
         printf("%s", next_token_str.c_str());
@@ -131,15 +126,11 @@ int main(int argc, char ** argv) {
 
     // second run
     for (auto i = 0; i < params.n_predict; i++) {
-        auto * logits = llama_get_logits(ctx2);
-        auto n_vocab = llama_n_vocab(model);
-        std::vector<llama_token_data> candidates;
-        candidates.reserve(n_vocab);
-        for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
-            candidates.emplace_back(llama_token_data{token_id, logits[token_id], 0.0f});
-        }
-        llama_token_data_array candidates_p = { candidates.data(), candidates.size(), false };
-        auto next_token = llama_sampling_sample_dist(smpl2, &candidates_p);
+        const auto * logits = llama_get_logits(ctx2);
+
+        llama_sampling_set_logits(smpl2, logits);
+
+        auto next_token = llama_sampling_sample_dist(smpl2, nullptr);
         auto next_token_str = llama_token_to_piece(ctx2, next_token);
 
         printf("%s", next_token_str.c_str());
@@ -224,15 +215,11 @@ int main(int argc, char ** argv) {
 
     // third run with seq 1 instead of 0
     for (auto i = 0; i < params.n_predict; i++) {
-        auto * logits = llama_get_logits(ctx3);
-        auto n_vocab = llama_n_vocab(model);
-        std::vector<llama_token_data> candidates;
-        candidates.reserve(n_vocab);
-        for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
-            candidates.emplace_back(llama_token_data{token_id, logits[token_id], 0.0f});
-        }
-        llama_token_data_array candidates_p = { candidates.data(), candidates.size(), false };
-        auto next_token = llama_sampling_sample_dist(smpl3, &candidates_p);
+        const auto * logits = llama_get_logits(ctx3);
+
+        llama_sampling_set_logits(smpl3, logits);
+
+        auto next_token = llama_sampling_sample_dist(smpl3, nullptr);
         auto next_token_str = llama_token_to_piece(ctx3, next_token);
 
         printf("%s", next_token_str.c_str());

@@ -2,7 +2,6 @@
 #include "llama.h"
 
 #include <algorithm>
-#include <cmath>
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -66,6 +65,8 @@ int main(int argc, char ** argv) {
     llama_context * ctx = llama_new_context_with_model(model, ctx_params);
 
     auto sparams = llama_sampling_default_params();
+
+    sparams.seed  = params.sparams.seed;
     sparams.top_k = 40;
     sparams.top_p = 0.9f;
     sparams.temp  = 0.4f;
@@ -171,25 +172,17 @@ int main(int argc, char ** argv) {
                 continue;
             }
 
-            auto   n_vocab = llama_n_vocab(model);
-            auto * logits  = llama_get_logits_ith(ctx, i_batch[i]);
+            const auto * logits = llama_get_logits_ith(ctx, i_batch[i]);
 
-            std::vector<llama_token_data> candidates;
-            candidates.reserve(n_vocab);
+            llama_sampling_set_logits(smpl, logits);
 
-            for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
-                candidates.emplace_back(llama_token_data{ token_id, logits[token_id], 0.0f });
-            }
+            llama_sampling_top_k(smpl, nullptr);
+            llama_sampling_top_p(smpl, nullptr);
+            llama_sampling_temp (smpl, nullptr);
 
-            llama_token_data_array candidates_p = { candidates.data(), candidates.size(), false };
+            const llama_token new_token_id = llama_sampling_sample_dist(smpl, nullptr);
 
-            llama_sampling_top_k(smpl, &candidates_p);
-            llama_sampling_top_p(smpl, &candidates_p);
-            llama_sampling_temp (smpl, &candidates_p);
-
-            const llama_token new_token_id = llama_sampling_sample_dist(smpl, &candidates_p);
-
-            //const llama_token new_token_id = llama_sampling_sample_greedy(smpl, &candidates_p);
+            //const llama_token new_token_id = llama_sampling_sample_greedy(smpl, nullptr);
 
             // is it an end of generation? -> mark the stream as finished
             if (llama_token_is_eog(model, new_token_id) || n_cur == n_predict) {
