@@ -1036,22 +1036,32 @@ extern "C" {
 
     LLAMA_API void llama_sampling_free(struct llama_sampling * smpl);
 
+    // Copies the internal state of the sampler (rng, prev, params, grammar, etc.)
     LLAMA_API struct llama_sampling * llama_sampling_cp(const struct llama_sampling * smpl);
 
     // - clear prev token
     // - reset grammar state
     LLAMA_API void llama_sampling_reset(struct llama_sampling * smpl);
 
-    LLAMA_API void llama_sampling_set_rng_seed  (struct llama_sampling * smpl, uint32_t seed);
+    // Sampling parameter mutation
+    // TODO: not sure if we want to keep these. Maybe it's better to keep llama_sampling immutable
     LLAMA_API void llama_sampling_set_grammar   (struct llama_sampling * smpl, const char * grammar_str, const char * grammar_root);
     LLAMA_API void llama_sampling_set_logit_bias(struct llama_sampling * smpl, int32_t n_logit_bias, const llama_logit_bias * logit_bias);
 
+    // Set the logits from which to sample.
+    // This call initializes the internal token candidates array.
+    // The internal candidates are implicitly used by the sampling API below when no candidates are provided.
     LLAMA_API void llama_sampling_set_logits(
             struct llama_sampling * smpl,
                       const float * logits);
 
+    /// @details Returns the current candidate tokens.
     LLAMA_API llama_token_data_array * llama_sampling_get_candidates(
             struct llama_sampling * smpl);
+
+    // The llama_sampling_ API below uses the parameters passed during the creation of the llama_sampling object.
+    // Each function can accept an array of token candidates. If the candidates are not provided, the internal
+    // candidates are used. The internal candidates are initialized by llama_sampling_set_logits().
 
     /// @details Sorts candidate tokens by their logits in descending order and calculate probabilities based on logits.
     LLAMA_API void llama_sampling_softmax(
@@ -1115,16 +1125,21 @@ extern "C" {
             struct llama_sampling * smpl,
            llama_token_data_array * candidates);
 
-    /// @details Sample a token using the configured samplers.
+    /// @details Sample a token using the configured samplers (see "llama_sampling_params.samplers").
     LLAMA_API llama_token llama_sampling_sample(
             struct llama_sampling * smpl,
            llama_token_data_array * candidates);
 
-    /// @details Accepts the sampled token into the sampling context
+    /// @details Accepts the sampled token into the sampling context.
+    ///  - adds it to "prev" tokens
+    ///  - updates the grammar state (if apply_grammar is true)
     LLAMA_API void llama_sampling_accept(
             struct llama_sampling * smpl,
                       llama_token   token,
                              bool   apply_grammar);
+
+    /// @details Get the number of accepted tokens so far (max of n_prev)
+    LLAMA_API int llama_sampling_n_prev(const struct llama_sampling * smpl);
 
     /// @details Get the ith accepted token
     /// @param ith [0, n_prev), ith == 0 is the last accepted token.
@@ -1137,9 +1152,6 @@ extern "C" {
     /// Same as llama_sampling_prev(smpl, 0)
     /// returns LLAMA_TOKEN_NULL if there are no accepted tokens
     LLAMA_API llama_token llama_sampling_last(const struct llama_sampling * smpl);
-
-    /// @details Get the number of accepted tokens (max of n_prev)
-    LLAMA_API int llama_sampling_n_prev(const struct llama_sampling * smpl);
 
     //
     // Model split

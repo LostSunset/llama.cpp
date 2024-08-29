@@ -20106,10 +20106,6 @@ void llama_sampling_reset(struct llama_sampling * smpl) {
     llama_sampling_reset_impl(*smpl);
 }
 
-void llama_sampling_set_rng_seed(struct llama_sampling * smpl, uint32_t seed) {
-    llama_sampling_set_rng_seed_impl(*smpl, seed);
-}
-
 void llama_sampling_set_grammar(struct llama_sampling * smpl, const char * grammar_str, const char * grammar_root) {
     llama_sampling_set_grammar_impl(*smpl, grammar_str, grammar_root);
 }
@@ -20414,16 +20410,16 @@ void llama_sampling_accept(
     smpl->n_accept++;
 }
 
+int llama_sampling_n_prev(const struct llama_sampling * smpl) {
+    return llama_sampling_n_prev_impl(*smpl);
+}
+
 llama_token llama_sampling_prev(const struct llama_sampling * smpl, int32_t ith) {
     return llama_sampling_prev_impl(*smpl, ith);
 }
 
 llama_token llama_sampling_last(const struct llama_sampling * smpl) {
     return llama_sampling_prev_impl(*smpl, 0);
-}
-
-int llama_sampling_n_prev(const struct llama_sampling * smpl) {
-    return llama_sampling_n_prev_impl(*smpl);
 }
 
 //

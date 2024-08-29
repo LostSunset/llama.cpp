@@ -186,10 +186,12 @@ void llama_sampling_top_k_impl(llama_token_data_array * candidates, int32_t k, s
             int ib = nbuckets - 1;
             for ( ; ib >= 0; --ib) {
                 nhave += histo[ib];
-                if (nhave >= k) break;
+                if (nhave >= k) {
+                    break;
+                }
             }
             std::vector<llama_token_data> tmp_tokens(nhave);
-            auto ptr = tmp_tokens.data();
+            auto * ptr = tmp_tokens.data();
             std::vector<llama_token_data*> bucket_ptrs;
             bucket_ptrs.reserve(nbuckets - ib);
             for (int j = nbuckets - 1; j >= ib; --j) {
@@ -573,6 +575,7 @@ llama_token llama_sampling_sample_mirostat_v2_impl(struct llama_token_data_array
     size_t X_idx = std::distance(candidates->data, std::find_if(candidates->data, candidates->data + candidates->size, [&](const llama_token_data & candidate) {
         return candidate.id == X;
     }));
+
     float observed_surprise = -log2f(candidates->data[X_idx].p);
     float e = observed_surprise - tau;
 

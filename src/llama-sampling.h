@@ -98,10 +98,10 @@ llama_token llama_sampling_sample_mirostat_impl   (struct llama_token_data_array
 /// @param mu Maximum cross-entropy. This value is initialized to be twice the target cross-entropy (`2 * tau`) and is updated in the algorithm based on the error between the target and observed surprisal.
 llama_token llama_sampling_sample_mirostat_v2_impl(struct llama_token_data_array * candidates, std::mt19937 & rng, float tau, float eta, float & mu);
 
-llama_token llama_sampling_sample_greedy_impl     (struct llama_token_data_array * candidates);
-llama_token llama_sampling_sample_dist_impl       (struct llama_token_data_array * candidates, std::mt19937 & rng);
+llama_token llama_sampling_sample_greedy_impl(struct llama_token_data_array * candidates);
+llama_token llama_sampling_sample_dist_impl  (struct llama_token_data_array * candidates, std::mt19937 & rng);
 
 void llama_sampling_accept_impl(struct llama_sampling & smpl, llama_token token, bool apply_grammar);
 
-llama_token llama_sampling_prev_impl(const struct llama_sampling & smpl, int ith);
+llama_token llama_sampling_prev_impl  (const struct llama_sampling & smpl, int ith);
 int         llama_sampling_n_prev_impl(const struct llama_sampling & smpl);
