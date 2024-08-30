@@ -243,9 +243,6 @@ int main(int argc, char ** argv) {
     }
 
     llama_attach_threadpool(ctx, threadpool, threadpool_batch);
-    if (ctx_guidance) {
-        llama_attach_threadpool(ctx_guidance, threadpool, threadpool_batch);
-    }
 
     const int n_ctx_train = llama_n_ctx_train(model);
     const int n_ctx = llama_n_ctx(ctx);
