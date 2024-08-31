@@ -11,10 +11,11 @@
 Inference of Meta's [LLaMA](https://arxiv.org/abs/2302.13971) model (and others) in pure C/C++
 
 > [!IMPORTANT]
-[2024 Jun 12] Binaries have been renamed w/ a `llama-` prefix. `main` is now `llama-cli`, `server` is `llama-server`, etc (https://github.com/ggerganov/llama.cpp/pull/7809)
+[2024 Aug 31] Breaking changes to the C-style sampling API: https://github.com/ggerganov/llama.cpp/pull/8643
 
 ## Recent API changes
 
+- [2024 Aug 31] Refactored `llama_sample` and `llama_grammar` APIs: https://github.com/ggerganov/llama.cpp/pull/8643
 - [2024 Jun 26] The source code and CMake build scripts have been restructured https://github.com/ggerganov/llama.cpp/pull/8006
 - [2024 Apr 21] `llama_token_to_piece` can now optionally render special tokens https://github.com/ggerganov/llama.cpp/pull/6807
 - [2024 Apr 4] State and session file functions reorganized under `llama_state_*` https://github.com/ggerganov/llama.cpp/pull/6341
@@ -26,7 +27,7 @@ Inference of Meta's [LLaMA](https://arxiv.org/abs/2302.13971) model (and others)
 
 ## Hot topics
 
-- **`convert.py` has been deprecated and moved to `examples/convert_legacy_llama.py`, please use `convert_hf_to_gguf.py`** https://github.com/ggerganov/llama.cpp/pull/7430
+- `convert.py` has been deprecated and moved to `examples/convert_legacy_llama.py`, please use `convert_hf_to_gguf.py` https://github.com/ggerganov/llama.cpp/pull/7430
 - Initial Flash-Attention support: https://github.com/ggerganov/llama.cpp/pull/5021
 - BPE pre-tokenization support has been added: https://github.com/ggerganov/llama.cpp/pull/6920
 - MoE memory layout has been updated - reconvert models for `mmap` support and regenerate `imatrix` https://github.com/ggerganov/llama.cpp/pull/6387
