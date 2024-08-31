@@ -17399,24 +17399,6 @@ struct llama_context_params llama_context_default_params() {
     return result;
 }
 
-struct llama_model_quantize_params llama_model_quantize_default_params() {
-    struct llama_model_quantize_params result = {
-        /*.nthread                     =*/ 0,
-        /*.ftype                       =*/ LLAMA_FTYPE_MOSTLY_Q5_1,
-        /*.output_tensor_type          =*/ GGML_TYPE_COUNT,
-        /*.token_embedding_type        =*/ GGML_TYPE_COUNT,
-        /*.allow_requantize            =*/ false,
-        /*.quantize_output_tensor      =*/ true,
-        /*.only_copy                   =*/ false,
-        /*.pure                        =*/ false,
-        /*.keep_split                  =*/ false,
-        /*.imatrix                     =*/ nullptr,
-        /*.kv_overrides                =*/ nullptr,
-    };
-
-    return result;
-}
-
 struct llama_sampling_params llama_sampling_default_params() {
     struct llama_sampling_params result = {
         /*.seed              =*/ LLAMA_DEFAULT_SEED,
@@ -17442,6 +17424,24 @@ struct llama_sampling_params llama_sampling_default_params() {
         /*.samplers          =*/ { LLAMA_SAMPLER_TYPE_TEMPERATURE, LLAMA_SAMPLER_TYPE_TOP_K, LLAMA_SAMPLER_TYPE_TOP_P, },
         /*.penalize_nl       =*/ false,
         /*.ignore_eos        =*/ false,
+    };
+
+    return result;
+}
+
+struct llama_model_quantize_params llama_model_quantize_default_params() {
+    struct llama_model_quantize_params result = {
+        /*.nthread                     =*/ 0,
+        /*.ftype                       =*/ LLAMA_FTYPE_MOSTLY_Q5_1,
+        /*.output_tensor_type          =*/ GGML_TYPE_COUNT,
+        /*.token_embedding_type        =*/ GGML_TYPE_COUNT,
+        /*.allow_requantize            =*/ false,
+        /*.quantize_output_tensor      =*/ true,
+        /*.only_copy                   =*/ false,
+        /*.pure                        =*/ false,
+        /*.keep_split                  =*/ false,
+        /*.imatrix                     =*/ nullptr,
+        /*.kv_overrides                =*/ nullptr,
     };
 
     return result;

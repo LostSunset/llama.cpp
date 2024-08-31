@@ -109,14 +109,18 @@ static std::string generate(llama_context * ctx, llama_sampling * smpl, const st
 
     while (true) {
         llama_batch_clear(bat);
-        auto n_inputs = (int32_t)inputs.size();
-        for (int32_t i = 0; i < n_inputs; i++) {
-            llama_batch_add(bat, inputs[i], i_current_token++, { 0 }, i == n_inputs - 1);
+        {
+            const int32_t n_inputs = inputs.size();
+
+            for (int32_t i = 0; i < n_inputs; i++) {
+                llama_batch_add(bat, inputs[i], i_current_token++, { 0 }, i == n_inputs - 1);
+            }
         }
         inputs.clear();
 
         llama_decode(ctx, bat);
-        auto * logits = llama_get_logits_ith(ctx, bat.n_tokens - 1);
+
+        const auto * logits = llama_get_logits_ith(ctx, bat.n_tokens - 1);
 
         llama_sampling_set_logits(smpl, logits);
 

@@ -2356,6 +2356,8 @@ struct server_context {
 
                 const auto * cur_p = llama_sampling_get_candidates(slot.smpl);
 
+                // TODO: this logic might have been broken during https://github.com/ggerganov/llama.cpp/pull/8643
+                //       fix if necessary
                 for (size_t i = 0; i < (size_t) slot.sparams.n_probs; ++i) {
                     result.probs.push_back({
                         cur_p->data[i].id,

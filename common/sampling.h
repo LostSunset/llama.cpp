@@ -39,7 +39,7 @@ typedef struct gpt_sampling_params {
         LLAMA_SAMPLER_TYPE_TEMPERATURE
     };
 
-    std::string grammar;  // optional BNF-like grammar to constrain sampling
+    std::string grammar; // optional BNF-like grammar to constrain sampling
 
     std::vector<llama_logit_bias> logit_bias; // logit biases to apply
 
@@ -55,6 +55,20 @@ struct llama_sampling * llama_sampling_init(const struct llama_model * model, co
 
 void llama_sampling_cp(llama_sampling * src, llama_sampling * dst);
 
+// common sampling implementation:
+//
+// - set logits
+// - apply the configured sampling constraints
+// - check if the token fits the grammar (if any)
+// - if not: resample by first applying the grammar constraints and then sampling again (slower path)
+//
+llama_token llama_sampling_sample(
+        struct llama_sampling * smpl,
+         struct llama_context * ctx,
+                          int   idx);
+
+// helpers
+
 // get a string representation of the last accepted tokens
 std::string llama_sampling_prev_str(llama_sampling * smpl, llama_context * ctx, int n);
 
@@ -62,9 +76,4 @@ char        llama_sampling_type_to_chr(enum llama_sampler_type sampler_type);
 std::string llama_sampling_type_to_str(enum llama_sampler_type sampler_type);
 
 std::vector<enum llama_sampler_type> llama_sampling_types_from_names(const std::vector<std::string> & names, bool allow_alt_names);
-std::vector<enum llama_sampler_type> llama_sampling_types_from_chars(const std::string & names_string);
-
-llama_token llama_sampling_sample(
-        struct llama_sampling * smpl,
-        struct llama_context * ctx,
-        int idx);
+std::vector<enum llama_sampler_type> llama_sampling_types_from_chars(const std::string & chars);

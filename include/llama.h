@@ -439,8 +439,8 @@ extern "C" {
     // Helpers for getting default parameters
     LLAMA_API struct llama_model_params          llama_model_default_params(void);
     LLAMA_API struct llama_context_params        llama_context_default_params(void);
-    LLAMA_API struct llama_model_quantize_params llama_model_quantize_default_params(void);
     LLAMA_API struct llama_sampling_params       llama_sampling_default_params(void);
+    LLAMA_API struct llama_model_quantize_params llama_model_quantize_default_params(void);
 
     // Initialize the llama + ggml backend
     // If numa is true, use NUMA optimizations

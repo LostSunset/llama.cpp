@@ -31,44 +31,41 @@ std::string gpt_sampling_params::print_samplers() const {
 
     return result;
 }
+
 struct llama_sampling * llama_sampling_init(const struct llama_model * model, const struct gpt_sampling_params & params) {
-    struct llama_sampling * result = nullptr;
+    llama_sampling_params lparams = llama_sampling_default_params();
 
-    {
-        auto lparams = llama_sampling_default_params();
+    lparams.seed              = params.seed;
+    lparams.n_prev            = params.n_prev;
+    lparams.n_probs           = params.n_probs;
+    lparams.min_keep          = params.min_keep;
+    lparams.top_k             = params.top_k;
+    lparams.top_p             = params.top_p;
+    lparams.min_p             = params.min_p;
+    lparams.tfs_z             = params.tfs_z;
+    lparams.typ_p             = params.typ_p;
+    lparams.temp              = params.temp;
+    lparams.dynatemp_range    = params.dynatemp_range;
+    lparams.dynatemp_exponent = params.dynatemp_exponent;
+    lparams.penalty_last_n    = params.penalty_last_n;
+    lparams.penalty_repeat    = params.penalty_repeat;
+    lparams.penalty_freq      = params.penalty_freq;
+    lparams.penalty_present   = params.penalty_present;
+    lparams.mirostat          = params.mirostat;
+    lparams.mirostat_tau      = params.mirostat_tau;
+    lparams.mirostat_eta      = params.mirostat_eta;
+    lparams.penalize_nl       = params.penalize_nl;
+    lparams.ignore_eos        = params.ignore_eos;
 
-        lparams.seed              = params.seed;
-        lparams.n_prev            = params.n_prev;
-        lparams.n_probs           = params.n_probs;
-        lparams.min_keep          = params.min_keep;
-        lparams.top_k             = params.top_k;
-        lparams.top_p             = params.top_p;
-        lparams.min_p             = params.min_p;
-        lparams.tfs_z             = params.tfs_z;
-        lparams.typ_p             = params.typ_p;
-        lparams.temp              = params.temp;
-        lparams.dynatemp_range    = params.dynatemp_range;
-        lparams.dynatemp_exponent = params.dynatemp_exponent;
-        lparams.penalty_last_n    = params.penalty_last_n;
-        lparams.penalty_repeat    = params.penalty_repeat;
-        lparams.penalty_freq      = params.penalty_freq;
-        lparams.penalty_present   = params.penalty_present;
-        lparams.mirostat          = params.mirostat;
-        lparams.mirostat_tau      = params.mirostat_tau;
-        lparams.mirostat_eta      = params.mirostat_eta;
-        lparams.penalize_nl       = params.penalize_nl;
-        lparams.ignore_eos        = params.ignore_eos;
-
-        lparams.n_samplers = params.samplers.size();
-        for (int i = 0; i < lparams.n_samplers; i++) {
-            lparams.samplers[i] = params.samplers[i];
-        }
-
-        result = llama_sampling_init(model, lparams);
-
-        llama_sampling_set_grammar   (result, params.grammar.c_str(), "root");
-        llama_sampling_set_logit_bias(result, params.logit_bias.size(), params.logit_bias.data());
+    lparams.n_samplers = params.samplers.size();
+    for (int i = 0; i < lparams.n_samplers; i++) {
+        lparams.samplers[i] = params.samplers[i];
     }
+
+    struct llama_sampling * result = llama_sampling_init(model, lparams);
+
+    llama_sampling_set_grammar   (result, params.grammar.c_str(), "root");
+    llama_sampling_set_logit_bias(result, params.logit_bias.size(), params.logit_bias.data());
 
     return result;
 }
@@ -79,6 +76,35 @@ void llama_sampling_cp(llama_sampling * src, llama_sampling * dst) {
     }
 
     dst = llama_sampling_cp(src);
+}
+
+llama_token llama_sampling_sample(
+        struct llama_sampling * smpl,
+        struct llama_context * ctx,
+        int idx) {
+    llama_sampling_set_logits(smpl, llama_get_logits_ith(ctx, idx));
+
+    // first, sample the token without any grammar constraints
+    const llama_token id = llama_sampling_sample(smpl, nullptr);
+
+    // create an array with a single token data element for the sampled id
+    llama_token_data       single_token_data       = { id, 1.0f, 0.0f };
+    llama_token_data_array single_token_data_array = { &single_token_data, 1, false };
+
+    llama_sampling_grammar(smpl, &single_token_data_array);
+
+    // check if the token is valid according to the grammar by seeing if its logit has been set to -INFINITY
+    const bool is_valid = single_token_data_array.data[0].logit != -INFINITY;
+    if (is_valid) {
+        return id;
+    }
+
+    // if the token is not valid, sample again, after applying the grammar constraints
+    llama_sampling_set_logits(smpl, llama_get_logits_ith(ctx, idx));
+
+    llama_sampling_grammar(smpl, nullptr);
+
+    return llama_sampling_sample(smpl, nullptr);
 }
 
 std::string llama_sampling_prev_str(llama_sampling * smpl, llama_context * ctx_main, int n) {
@@ -152,27 +178,27 @@ std::vector<llama_sampler_type> llama_sampling_types_from_names(const std::vecto
         { "temp",        LLAMA_SAMPLER_TYPE_TEMPERATURE },
     };
 
-    std::vector<llama_sampler_type> sampler_types;
-    sampler_types.reserve(names.size());
+    std::vector<llama_sampler_type> samplers;
+    samplers.reserve(names.size());
 
     for (const auto & name : names) {
-        auto sampler_item = sampler_canonical_name_map.find(name);
-        if (sampler_item != sampler_canonical_name_map.end()) {
-            sampler_types.push_back(sampler_item->second);
+        auto sampler = sampler_canonical_name_map.find(name);
+        if (sampler != sampler_canonical_name_map.end()) {
+            samplers.push_back(sampler->second);
         } else {
             if (allow_alt_names) {
-                sampler_item = sampler_alt_name_map.find(name);
-                if (sampler_item != sampler_alt_name_map.end()) {
-                    sampler_types.push_back(sampler_item->second);
+                sampler = sampler_alt_name_map.find(name);
+                if (sampler != sampler_alt_name_map.end()) {
+                    samplers.push_back(sampler->second);
                 }
             }
         }
     }
 
-    return sampler_types;
+    return samplers;
 }
 
-std::vector<llama_sampler_type> llama_sampling_types_from_chars(const std::string & names_string) {
+std::vector<llama_sampler_type> llama_sampling_types_from_chars(const std::string & chars) {
     std::unordered_map<char, llama_sampler_type> sampler_name_map {
         { llama_sampling_type_to_chr(LLAMA_SAMPLER_TYPE_TOP_K),       LLAMA_SAMPLER_TYPE_TOP_K },
         { llama_sampling_type_to_chr(LLAMA_SAMPLER_TYPE_TFS_Z),       LLAMA_SAMPLER_TYPE_TFS_Z },
@@ -182,42 +208,15 @@ std::vector<llama_sampler_type> llama_sampling_types_from_chars(const std::strin
         { llama_sampling_type_to_chr(LLAMA_SAMPLER_TYPE_TEMPERATURE), LLAMA_SAMPLER_TYPE_TEMPERATURE }
     };
 
-    std::vector<llama_sampler_type> sampler_types;
-    sampler_types.reserve(names_string.size());
-    for (const auto & c : names_string) {
-        const auto sampler_item = sampler_name_map.find(c);
-        if (sampler_item != sampler_name_map.end()) {
-            sampler_types.push_back(sampler_item->second);
+    std::vector<llama_sampler_type> samplers;
+    samplers.reserve(chars.size());
+
+    for (const auto & c : chars) {
+        const auto sampler = sampler_name_map.find(c);
+        if (sampler != sampler_name_map.end()) {
+            samplers.push_back(sampler->second);
         }
     }
-    return sampler_types;
-}
 
-llama_token llama_sampling_sample(
-        struct llama_sampling * smpl,
-        struct llama_context * ctx,
-        int idx) {
-    llama_sampling_set_logits(smpl, llama_get_logits_ith(ctx, idx));
-
-    // first, sample the token without any grammar constraints
-    auto id = llama_sampling_sample(smpl, nullptr);
-
-    // create an array with a single token data element for the sampled id
-    llama_token_data single_token_data = {id, 1.0f, 0.0f};
-    llama_token_data_array single_token_data_array = { &single_token_data, 1, false };
-
-    llama_sampling_grammar(smpl, &single_token_data_array);
-
-    // check if the token is valid according to the grammar by seeing if its logit has been set to -INFINITY
-    const bool is_valid = single_token_data_array.data[0].logit != -INFINITY;
-    if (is_valid) {
-        return id;
-    }
-
-    // if the token is not valid, sample again, after applying the grammar constraints
-    llama_sampling_set_logits(smpl, llama_get_logits_ith(ctx, idx));
-
-    llama_sampling_grammar(smpl, nullptr);
-
-    return llama_sampling_sample(smpl, nullptr);
+    return samplers;
 }
