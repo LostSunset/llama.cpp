@@ -37,6 +37,9 @@ int main(int argc, char ** argv) {
         return 1;
     }
 
+    // for probabilities to be computed even with temp = 0
+    params.sparams.n_probs = 16;
+
     // max number of parallel drafting sequences (i.e. tree branches)
     const int n_seq_dft = params.n_parallel;
 
@@ -181,10 +184,6 @@ int main(int argc, char ** argv) {
 
     // draft sequence data
     std::vector<seq_draft> drafts(n_seq_dft);
-
-    if (params.sparams.temp == 0) {
-        params.sparams.temp = -1.0f; // force greedy sampling with probs for the draft model
-    }
 
     for (int s = 0; s < n_seq_dft; ++s) {
         // allocate llama_sampling for each draft sequence
