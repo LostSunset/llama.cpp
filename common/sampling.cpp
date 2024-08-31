@@ -70,7 +70,7 @@ struct llama_sampling * llama_sampling_init(const struct llama_model * model, co
     return result;
 }
 
-void llama_sampling_cp(llama_sampling * src, llama_sampling * dst) {
+void llama_sampling_cp(llama_sampling * src, llama_sampling *& dst) {
     if (dst) {
         llama_sampling_free(dst);
     }

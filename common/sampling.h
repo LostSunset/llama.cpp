@@ -53,7 +53,7 @@ typedef struct gpt_sampling_params {
 // overload of llama_sampling_init using gpt_sampling_params
 struct llama_sampling * llama_sampling_init(const struct llama_model * model, const struct gpt_sampling_params & params);
 
-void llama_sampling_cp(llama_sampling * src, llama_sampling * dst);
+void llama_sampling_cp(llama_sampling * src, llama_sampling *& dst);
 
 // common sampling implementation:
 //
